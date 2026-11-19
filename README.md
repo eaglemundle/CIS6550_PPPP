@@ -54,6 +54,47 @@ By keeping prompt processing and AI inference on the user's device, the project 
 
 ## System Architecture
 
+```mermaid
+flowchart TD
+    subgraph User_Environment ["User Local Machine - 100% On-Device"]
+        direction TB
+        User(["User"]) -->|"1. Raw Prompt with PII"| Ext["Chrome Extension - Manifest V3<br/>popup.html / popup.js"]
+        
+        subgraph Backend ["Local FastAPI Backend - 127.0.0.1:8000"]
+            direction TB
+            API["main.py - API Gateway"]
+            PII["pii_detector.py<br/>Regex / Microsoft Presidio"]
+            Mask["prompt_masking.py<br/>Placeholder Mapping Store"]
+            Resp["response.py<br/>Placeholder Restoration"]
+            
+            API --> PII
+            PII -->|"2. Detected Entities"| Mask
+            Mask -->|"3. Sanitized Prompt"| API
+        end
+        
+        Ollama["Ollama Runtime<br/>Local LLM: Llama / Mistral"]
+        
+        Ext <-->|"HTTP REST API - Localhost"| API
+        API -->|"4. Masked Prompt"| Ollama
+        Ollama -->|"5. Masked AI Response"| API
+        API --> Resp
+        Resp -->|"6. Restored Final Response"| Ext
+        Ext -->|"7. Display Safe Output"| User
+    end
+
+    ExternalCloud["External AI Services"]
+    User_Environment -. "Zero External Data Transmission" .-x ExternalCloud
+
+    style User_Environment fill:#f8f9fa,stroke:#333,stroke-width:2px
+    style Backend fill:#e3f2fd,stroke:#1565c0,stroke-width:1.5px
+    style Ollama fill:#fff3e0,stroke:#ef6c00,stroke-width:1.5px
+    style ExternalCloud fill:#ffebee,stroke:#c62828,stroke-dasharray: 5 5
+```
+
+All prompt processing and AI inference are intended to remain on the local machine without requiring external AI APIs.
+
+## System Architecture
+
 ```text
 User Prompt
     |
@@ -101,6 +142,7 @@ Local-AI-Privacy-Protector/
 |-- requirements.txt
 |-- Final_report.pdf
 ```
+
 
 ## Installation and Setup
 
