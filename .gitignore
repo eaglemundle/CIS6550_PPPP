@@ -1,0 +1,28 @@
+# 1. OS and personal editor settings (Essential when teammates use different OS/editors)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 2. Dependencies and build outputs (In case bundlers like React or Vite are added later)
+node_modules/
+dist/
+build/
+
+# 3. Local environment configurations and logs
+.env
+*.log
+config.local.js
+
+# 4. Extension packaging files (Archives and keys for deployment)
+*.zip
+*.crx
+*.pem
+
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
