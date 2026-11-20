@@ -42,7 +42,7 @@ By keeping prompt processing and AI inference on the user's device, the project 
 | Backend | Python, FastAPI |
 | PII Detection | Regex, Microsoft Presidio |
 | AI Runtime | Ollama |
-| Local LLM | llama3.2:3b |
+| Local LLM | llama3.2:3b, mistral, qwen2.5:3b |
 | Testing | Python, Chrome DevTools, Wireshark |
 | Version Control | Git, GitHub |
 
