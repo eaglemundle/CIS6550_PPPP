@@ -19,8 +19,8 @@ By keeping prompt processing and AI inference on the user's device, the project 
 | Phase | Activities |Timeline
 |---|---|---|
 | Design | Privacy assessment and system architecture | Oct 20 ~ Nov 6 |
-| Development | Chrome extension, PII detection, and Ollama integration | Nov 7 ~ Nov 16 |
-| Testing | Detection accuracy and network verification | Nov 17 ~ Nov 28 |
+| Development | Chrome extension, PII detection, and Ollama integration | Nov 7 ~ Nov 20 |
+| Testing | Detection accuracy and network verification | Nov 20 ~ Nov 28 |
 | Evaluation | Performance, response quality, and usability | Nov 29 ~ Dec 4 |
 | Finalization | Documentation and project presentation |Dec 5 ~ Dec 10|
 
