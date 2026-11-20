@@ -22,7 +22,7 @@ By keeping prompt processing and AI inference on the user's device, the project 
 | Development | Chrome extension, PII detection, and Ollama integration | Nov 7 ~ Nov 20 |
 | Testing | Detection accuracy and network verification | Nov 20 ~ Nov 28 |
 | Evaluation | Performance, response quality, and usability | Nov 29 ~ Dec 4 |
-| Finalization | Documentation and project presentation |Dec 5 ~ Dec 10|
+| Finalization | DOCUMENTATION (50% of total grade) - methodology, implemetation details, evaluation metrics, limitations, DISCISSIONS, and future steps | Dec 5 ~ Dec 10|
 
 ## Key Features
 
@@ -42,7 +42,7 @@ By keeping prompt processing and AI inference on the user's device, the project 
 | Backend | Python, FastAPI |
 | PII Detection | Regex, Microsoft Presidio |
 | AI Runtime | Ollama |
-| Local LLM | Llama / Mistral |
+| Local LLM | llama3.2:3b |
 | Testing | Python, Chrome DevTools, Wireshark |
 | Version Control | Git, GitHub |
 
@@ -123,12 +123,13 @@ All prompt processing and AI inference are intended to remain on the local machi
 Local-AI-Privacy-Protector/
 |
 |-- extension/                  # Chrome extension (frontend)
-|   |-- manifest.json
+|   |-- manifest.json           # Shared config (permissions, script paths, etc.- notify teammate before editing)
 |   |-- popup.html
 |   |-- popup.css
 |   |-- popup.js
 |
-|-- backend/                    # Local backend
+|-- backend/                    # Local backend, Ollama API integration, streaming, and state management
+    └── background.js           # Service Worker
 |   |-- main.py
 |   |-- pii_detector.py
 |   |-- prompt_masking.py
@@ -138,7 +139,9 @@ Local-AI-Privacy-Protector/
 |   |-- test_pii.py
 |   |-- test_masking.py
 |
-|-- README.md                   # Documentation and Report
+|-- README.md                   # Documentation and Report, Initial setup and Ollama execution guide
+├── shared/                     # [Shared] Message types exchanged between frontend and backend
+│   └── types.js                # e.g., { type: 'ASK_LLM', prompt: '...' }
 |-- requirements.txt
 |-- Final_report.pdf
 ```
@@ -206,6 +209,7 @@ uvicorn main:app --reload --host 127.0.0.1 --port 8000
 4. Select **Load unpacked**.
 5. Select the `extension/` directory.
 6. Open the extension and start testing.
+  
 
 ## Testing and Evaluation
 
