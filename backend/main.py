@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 import requests
@@ -9,7 +9,8 @@ import time
 
 from pii_config import (
     OLLAMA_URL,
-    MODEL_NAME,
+    DEFAULT_MODEL,
+    SUPPORTED_MODELS,
     REGEX_RULES,
     MEDICAL_DENY_LIST,
     MEDICAL_CONTEXT_WORDS,
@@ -74,8 +75,10 @@ class MaskResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     masked_text: str
+    model: Optional[str] = DEFAULT_MODEL
 
 class ChatResponse(BaseModel):
+    model_used: str
     masked_reply: str
     latency_ms: float
 
@@ -88,7 +91,11 @@ class RestoreResponse(BaseModel):
 
 @app.get("/")
 def health_check():
-    return {"status": "ok", "model": MODEL_NAME, "engine": "Presidio + Config Rules + Ollama"}
+    return {
+        "status": "ok",
+        "default_model": DEFAULT_MODEL,
+        "supported_models": SUPPORTED_MODELS
+    }
 
 @app.post("/api/mask", response_model=MaskResponse)
 def mask_prompt(request: MaskRequest):
@@ -160,6 +167,8 @@ def mask_prompt(request: MaskRequest):
 @app.post("/api/chat", response_model=ChatResponse)
 def chat_with_local_llm(request: ChatRequest):
     start_time = time.perf_counter()
+    selected_model = request.model if request.model in SUPPORTED_MODELS else DEFAULT_MODEL
+
     system_instruction = (
         "You are a helpful AI assistant. The user's prompt contains privacy placeholders "
         "such as [PERSON_1], [API_KEY_1], [MEDICAL_INFO_1], [SOURCE_CODE_1], etc. "
@@ -168,17 +177,21 @@ def chat_with_local_llm(request: ChatRequest):
     )
 
     payload = {
-        "model": MODEL_NAME,
+        "model": selected_model,
         "prompt": system_instruction,
         "stream": False
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=90)
         response.raise_for_status()
         reply = response.json().get("response", "")
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
-        return ChatResponse(masked_reply=reply, latency_ms=latency_ms)
+        return ChatResponse(
+            model_used=selected_model,
+            masked_reply=reply,
+            latency_ms=latency_ms
+        )
     except requests.exceptions.ConnectionError:
         raise HTTPException(status_code=503, detail="Ollama service is unavailable.")
     except Exception as e:

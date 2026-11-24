@@ -1,5 +1,6 @@
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama3.2:3b"
+DEFAULT_MODEL = "mistral"
+SUPPORTED_MODELS = ["llama3.2:3b", "qwen2.5:3b", "mistral"]
 
 # Regex-based PII rules: (entity_type, pattern_name, regex, confidence_score)
 REGEX_RULES = [
