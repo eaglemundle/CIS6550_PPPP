@@ -66,6 +66,9 @@ button {
     color: white;
     font-size: 12px;
 }
+.secondary:hover {
+    background: #008000;
+}
 
 .summary {
     display: grid;
@@ -104,6 +107,10 @@ h2 {
     color: white;
     box-shadow: 0 3px 5px #aaa;
 }
+.outline:hover {
+    background: white;
+    color: black;
+}
 
 .recommendation {
     display: grid;
@@ -126,6 +133,11 @@ h2 {
     border: 1px solid #e5d500;
     color: #f5e500;
     box-shadow: 0 3px 6px #e5d50055;
+    
+}
+.generate:hover {
+    background: #e5d500;
+    color: black;
 }
 
 button:disabled {
