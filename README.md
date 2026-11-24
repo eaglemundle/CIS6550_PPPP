@@ -129,11 +129,11 @@ Local-AI-Privacy-Protector/
 |   |-- popup.js
 |
 |-- backend/                    # Local backend, Ollama API integration, streaming, and state management
-    └── background.js           # Service Worker
+    └── benchmark_models.py     
 |   |-- main.py
-|   |-- pii_detector.py
-|   |-- prompt_masking.py
-|   |-- response.py
+|   |-- pii_config.py
+|   |-- evaluate.py
+|   |-- requirements.txt
 |
 |-- test/                       # Testing and evaluation
 |   |-- test_pii.py
@@ -142,7 +142,8 @@ Local-AI-Privacy-Protector/
 |-- README.md                   # Documentation and Report, Initial setup and Ollama execution guide
 ├── shared/                     # [Shared] Message types exchanged between frontend and backend
 │   └── types.js                # e.g., { type: 'ASK_LLM', prompt: '...' }
-|-- requirements.txt
+|-- command.txt
+|-- .gitignore
 |-- Final_report.pdf
 ```
 

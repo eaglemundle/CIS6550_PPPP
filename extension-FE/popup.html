@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Privacy Guard</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <main class="popup">
+
+        <header>
+            <h1>AI Prompt Privacy Guard</h1>
+            <span class="shield">🔒</span>
+        </header>
+
+        <textarea id="prompt"
+            placeholder="Paste your AI prompt here..."></textarea>
+
+        <button id="analyze" class="secondary">
+            Analyze Prompt
+        </button>
+
+        <section class="summary">
+            <div>
+                <h2 id="warning-count">Warnings: 0</h2>
+                <p id="warning-message">
+                    Analyze your prompt to identify potential privacy risks.
+                </p>
+                <p class="explanation">
+                    Sensitive or personally identifiable information (PII)
+                    could be exposed when submitted to an AI platform.
+                </p>
+            </div>
+
+            <button id="details" class="outline">
+                Show Details
+            </button>
+        </section>
+
+        <section id="details-panel" class="details hidden">
+            <h3>Detected Information</h3>
+            <div id="detected-items"></div>
+
+            <h3>Masked Prompt</h3>
+            <pre id="masked-text"></pre>
+        </section>
+
+        <section class="recommendation">
+            <p>
+                <strong>Recommendation:</strong>
+                Review flagged information before sharing sensitive data.
+            </p>
+            <button id="generate" class="generate" disabled>
+                Generate Alternatives
+            </button>
+        </section>
+
+        <section class="model-section">
+            <p>Local AI Model</p>
+            <div class="model-selector">
+                <button data-model="llama3.2:3b" class="active">
+                    Llama 3.2
+                </button>
+                <button data-model="qwen2.5:3b">Qwen 2.5</button>
+                <button data-model="mistral">Mistral</button>  
+            </div>
+        </section>
+
+        <section id="response-section" class="response hidden">
+            <h3>Generated Alternative</h3>
+            <pre id="response-text"></pre>
+            <p id="latency"></p>
+        </section>
+
+        <div id="status" role="status"></div>
+
+        <footer>
+            Local processing · Powered by Ollama
+        </footer>
+
+    </main>
+
+    <script src="popup.js"></script>
+</body>
+</html>
