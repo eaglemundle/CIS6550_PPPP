@@ -118,7 +118,7 @@ Response Restoration
 All prompt processing and AI inference are intended to remain on the local machine without requiring external AI APIs.
 
 ## Project Structure
-
+```text
 CIS6550_PPPP/
 ├── extension-FE/               # Chrome Extension (Manifest V3 Frontend)
 │   ├── manifest.json           # Extension permissions & popup configuration
@@ -142,7 +142,7 @@ CIS6550_PPPP/
 ├── README.md                   # Setup instructions, architecture overview, & Ollama guide
 ├── .gitignore                  # Git ignore rules (.venv, __pycache__, local logs)
 └── Final_report.pdf            # CIS6550 Capstone Final Report
-
+```
 
 
 ## Installation and Setup
