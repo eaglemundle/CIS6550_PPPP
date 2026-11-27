@@ -1,4 +1,12 @@
-
+<!--
+  @file popup.html
+  @description Popup UI layout for AI Prompt Privacy Guard (CIS6550 PPPP).
+  @modified_by Myunghee Jung
+  @updates
+   - Placed the header at the top followed immediately by the Local AI Model selector
+     to improve top-down visual hierarchy and eliminate scrolling when switching models.
+   - Preserved all existing element IDs and classes for seamless popup.js / popup.css compatibility.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,11 +18,23 @@
 <body>
     <main class="popup">
 
+        <!-- App Title Header -->
         <header>
             <h1>AI Prompt Privacy Guard</h1>
             <span class="shield">🔒</span>
         </header>
 
+        <!-- Local AI Model Selector (Placed at top for quick switching) -->
+        <section class="model-section">
+            <p>Local AI Model</p>
+            <div class="model-selector">
+                <button data-model="llama3.2:3b" class="active">Llama 3.2</button>
+                <button data-model="qwen2.5:7b">Qwen 2.5</button>
+                <button data-model="mistral:latest">Mistral</button>
+            </div>
+        </section>
+
+        <!-- User Prompt Input & Analysis Trigger -->
         <textarea id="prompt"
             placeholder="Paste your AI prompt here..."></textarea>
 
@@ -22,6 +42,7 @@
             Analyze Prompt
         </button>
 
+        <!-- PII Risk Summary -->
         <section class="summary">
             <div>
                 <h2 id="warning-count">Warnings: 0</h2>
@@ -39,6 +60,7 @@
             </button>
         </section>
 
+        <!-- Expandable Details & Masked Prompt Preview -->
         <section id="details-panel" class="details hidden">
             <h3>Detected Information</h3>
             <div id="detected-items"></div>
@@ -47,6 +69,7 @@
             <pre id="masked-text"></pre>
         </section>
 
+        <!-- Safe Alternative Generation -->
         <section class="recommendation">
             <p>
                 <strong>Recommendation:</strong>
@@ -57,23 +80,14 @@
             </button>
         </section>
 
-        <section class="model-section">
-            <p>Local AI Model</p>
-            <div class="model-selector">
-                <button data-model="llama3.2:3b" class="active">
-                    Llama 3.2
-                </button>
-                <button data-model="qwen2.5:3b">Qwen 2.5</button>
-                <button data-model="mistral">Mistral</button>  
-            </div>
-        </section>
-
+        <!-- Local LLM Output & Latency Display -->
         <section id="response-section" class="response hidden">
             <h3>Generated Alternative</h3>
             <pre id="response-text"></pre>
             <p id="latency"></p>
         </section>
 
+        <!-- Live Execution Status -->
         <div id="status" role="status"></div>
 
         <footer>

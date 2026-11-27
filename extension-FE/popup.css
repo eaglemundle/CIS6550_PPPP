@@ -1,23 +1,36 @@
+/*
+ * @file popup.css
+ * @description Optimized layout and readable typography for AI Prompt Privacy Guard.
+ * @modified_by Myunghee Jung
+ * @updates
+ *  - Widened popup to 760px and compacted vertical margins to fit within Chrome's 600px height limit without initial scrolling.
+ *  - Increased base font sizes (14px-24px) for improved readability.
+ *  - Adjusted .model-section spacing for top placement below the header.
+ *  - Added internal scrolling for generated LLM outputs to preserve layout boundaries.
+ */
 
 * {
     box-sizing: border-box;
 }
 
 body {
-    width: 430px;
+    width: 760px;
+    max-height: 600px;
     margin: 0;
-    background: #e8eeee;
-    font-family: "Consolas", "Courier New", monospace;
-    color: #eeeeee;
+    padding: 8px 12px;
+    background-color: #121212;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    overflow-y: auto;
 }
 
 .popup {
-    margin: 12px;
-    padding: 24px;
-    min-height: 420px;
+    margin: 0;
+    padding: 16px 22px;
     background: #0b0b0b;
-    border-radius: 22px;
-    box-shadow: 0 5px 12px #0004;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 header {
@@ -25,23 +38,63 @@ header {
     justify-content: center;
     align-items: center;
     gap: 10px;
-    margin-bottom: 22px;
+    margin-bottom: 12px;
 }
 
 h1 {
-    font-size: 20px;
-    letter-spacing: 1px;
+    font-size: 24px;
+    letter-spacing: 0.5px;
     margin: 0;
 }
 
 .shield {
-    font-size: 25px;
+    font-size: 26px;
     color: #facc15;
 }
 
+/* Top Model Selector Section */
+.model-section {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #cccccc;
+}
+
+.model-section p {
+    margin: 0 0 6px;
+    font-weight: 600;
+}
+
+.model-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.model-selector button {
+    flex: 1;
+    padding: 9px 8px;
+    background: #222;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.model-selector button:hover {
+    border-color: #e5d500;
+}
+
+.model-selector button.active {
+    background: #e5d500;
+    color: #000000;
+    border-color: #e5d500;
+}
+
+/* Prompt Input */
 textarea {
     width: 100%;
-    min-height: 75px;
+    min-height: 68px;
     resize: vertical;
     padding: 10px;
     background: #171717;
@@ -49,7 +102,8 @@ textarea {
     border-radius: 8px;
     color: white;
     font: inherit;
-    font-size: 12px;
+    font-size: 15px;
+    line-height: 1.4;
 }
 
 button {
@@ -59,35 +113,39 @@ button {
 
 .secondary {
     margin-top: 8px;
-    padding: 8px 14px;
+    padding: 9px 16px;
     background: #333;
     border: 1px solid #888;
-    border-radius: 7px;
+    border-radius: 8px;
     color: white;
-    font-size: 12px;
-}
-.secondary:hover {
-    background: #008000;
+    font-size: 15px;
+    font-weight: 600;
 }
 
+.secondary:hover {
+    background: #008000;
+    border-color: #00b300;
+}
+
+/* Risk Summary & Recommendation Grids */
 .summary {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 15px;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 14px;
 }
 
 h2 {
     color: #ff3030;
-    font-size: 18px;
-    margin: 0 0 7px;
+    font-size: 20px;
+    margin: 0 0 6px;
 }
 
 .summary p {
-    font-size: 12px;
-    line-height: 1.5;
-    margin: 5px 0;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 4px 0;
 }
 
 .explanation {
@@ -96,17 +154,19 @@ h2 {
 
 .outline,
 .generate {
-    padding: 12px 8px;
-    border-radius: 14px;
+    padding: 12px 10px;
+    border-radius: 12px;
     background: black;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .outline {
     border: 1px solid white;
     color: white;
-    box-shadow: 0 3px 5px #aaa;
+    box-shadow: 0 3px 6px rgba(170, 170, 170, 0.4);
 }
+
 .outline:hover {
     background: white;
     color: black;
@@ -114,15 +174,16 @@ h2 {
 
 .recommendation {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 15px;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
     align-items: center;
-    margin-top: 25px;
+    margin-top: 14px;
 }
 
 .recommendation p {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.45;
+    margin: 0;
 }
 
 .recommendation strong {
@@ -132,9 +193,9 @@ h2 {
 .generate {
     border: 1px solid #e5d500;
     color: #f5e500;
-    box-shadow: 0 3px 6px #e5d50055;
-    
+    box-shadow: 0 3px 8px rgba(229, 213, 0, 0.35);
 }
+
 .generate:hover {
     background: #e5d500;
     color: black;
@@ -145,80 +206,70 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* Expandable Details & Generated Output */
 .details {
-    padding: 12px;
-    margin-top: 15px;
+    padding: 12px 14px;
+    margin-top: 14px;
     background: #191919;
     border-radius: 8px;
     border: 1px solid #444;
+    font-size: 14px;
 }
 
 h3 {
-    font-size: 12px;
+    font-size: 15px;
     color: #facc15;
+    margin: 0 0 6px;
+}
+
+#detected-items p {
+    margin: 4px 0;
+    font-size: 14px;
 }
 
 .details pre,
 .response pre {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    font-size: 11px;
-    line-height: 1.5;
-    color: #ddd;
-}
-
-.model-section {
-    margin-top: 25px;
-    font-size: 11px;
-    color: #aaa;
-}
-
-.model-selector {
-    display: flex;
-    gap: 7px;
-}
-
-.model-selector button {
-    flex: 1;
-    padding: 8px 3px;
-    background: #222;
-    color: #ccc;
-    border: 1px solid #555;
-    border-radius: 7px;
-    font-size: 10px;
-}
-
-.model-selector button.active {
-    background: #e5d500;
-    color: black;
-    border-color: #e5d500;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #eee;
+    margin: 6px 0;
 }
 
 .response {
-    margin-top: 20px;
-    padding: 12px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #141414;
     border: 1px solid #555;
     border-radius: 8px;
 }
 
+.response pre {
+    max-height: 160px;
+    overflow-y: auto;
+}
+
 #latency {
-    color: #999;
-    font-size: 10px;
+    color: #aaa;
+    font-size: 13px;
+    margin: 6px 0 0;
 }
 
 #status {
     margin-top: 12px;
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 500;
     color: #00e64d;
 }
 
 footer {
     text-align: center;
-    margin-top: 20px;
-    padding-top: 12px;
+    margin-top: 12px;
+    padding-top: 8px;
     border-top: 1px solid #333;
-    color: #888;
-    font-size: 10px;
+    color: #999;
+    font-size: 13px;
 }
 
 .hidden {

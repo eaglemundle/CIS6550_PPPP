@@ -1,6 +1,16 @@
+
+import json
+from pathlib import Path
+
+# Load externalized model configuration from models.json
+_CONFIG_PATH = Path(__file__).parent / "models.json"
+with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
+    _MODEL_CFG = json.load(f)
+
+DEFAULT_MODEL = _MODEL_CFG.get("default_model", "llama3.2:3b")
+SUPPORTED_MODELS = _MODEL_CFG.get("supported_models", [DEFAULT_MODEL])
+
 OLLAMA_URL = "http://localhost:11434/api/generate"
-DEFAULT_MODEL = "mistral"
-SUPPORTED_MODELS = ["llama3.2:3b", "qwen2.5:3b", "mistral"]
 
 # Regex-based PII rules: (entity_type, pattern_name, regex, confidence_score)
 REGEX_RULES = [

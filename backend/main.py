@@ -167,14 +167,23 @@ def mask_prompt(request: MaskRequest):
 @app.post("/api/chat", response_model=ChatResponse)
 def chat_with_local_llm(request: ChatRequest):
     start_time = time.perf_counter()
-    selected_model = request.model if request.model in SUPPORTED_MODELS else DEFAULT_MODEL
+
+    if request.model and request.model not in SUPPORTED_MODELS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported model '{request.model}'. Allowed: {SUPPORTED_MODELS}"
+        )
+
+    selected_model = request.model or DEFAULT_MODEL
 
     system_instruction = (
-        "You are a helpful AI assistant. The user's prompt contains privacy placeholders "
-        "such as [PERSON_1], [API_KEY_1], [MEDICAL_INFO_1], [SOURCE_CODE_1], etc. "
-        "Keep these exact placeholders intact in your response where appropriate so the client can restore them later.\n\n"
-        f"User Prompt:\n{request.masked_text}"
+        "You are a helpful AI assistant. All sensitive personal information in the prompt below "
+        "has already been safely anonymized into placeholders (e.g., [PERSON_1], [LOCATION_1], [EMAIL_1]). "
+        "Do NOT refuse the request for privacy reasons. Fulfill the user's request naturally "
+        "while keeping these exact placeholders intact in your response.\n\n"
+        f"Sanitized User Prompt:\n{request.masked_text}"
     )
+
 
     payload = {
         "model": selected_model,
@@ -183,23 +192,28 @@ def chat_with_local_llm(request: ChatRequest):
     }
 
     try:
+        # Forward sanitized prompt to the user-selected local Ollama model
         response = requests.post(OLLAMA_URL, json=payload, timeout=90)
+
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model '{selected_model}' not installed locally. Run: ollama pull {selected_model}"
+            )
+
         response.raise_for_status()
         reply = response.json().get("response", "")
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
         return ChatResponse(
             model_used=selected_model,
             masked_reply=reply,
             latency_ms=latency_ms
         )
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Ollama service is unavailable.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/restore", response_model=RestoreResponse)
-def restore_response(request: RestoreRequest):
-    restored = request.text
-    for placeholder, original_val in request.mappings.items():
-        restored = restored.replace(placeholder, original_val)
-    return RestoreResponse(restored_text=restored)
+    except HTTPException:
+        raise
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=503, detail="Ollama service is unavailable on localhost:11434.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Local inference error: {str(e)}")
