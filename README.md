@@ -119,33 +119,30 @@ All prompt processing and AI inference are intended to remain on the local machi
 
 ## Project Structure
 
-```text
-Local-AI-Privacy-Protector/
-|
-|-- extension/                  # Chrome extension (frontend)
-|   |-- manifest.json           # Shared config (permissions, script paths, etc.- notify teammate before editing)
-|   |-- popup.html
-|   |-- popup.css
-|   |-- popup.js
-|
-|-- backend/                    # Local backend, Ollama API integration, streaming, and state management
-    └── benchmark_models.py     
-|   |-- main.py
-|   |-- pii_config.py
-|   |-- evaluate.py
-|   |-- requirements.txt
-|
-|-- test/                       # Testing and evaluation
-|   |-- test_pii.py
-|   |-- test_masking.py
-|
-|-- README.md                   # Documentation and Report, Initial setup and Ollama execution guide
-├── shared/                     # [Shared] Message types exchanged between frontend and backend
-│   └── types.js                # e.g., { type: 'ASK_LLM', prompt: '...' }
-|-- command.txt
-|-- .gitignore
-|-- Final_report.pdf
-```
+CIS6550_PPPP/
+├── extension-FE/               # Chrome Extension (Manifest V3 Frontend)
+│   ├── manifest.json           # Extension permissions & popup configuration
+│   ├── popup.html              # Popup UI layout with top-level model selector
+│   ├── popup.css               # Readable dark-mode styling (760px width)
+│   └── popup.js                # FastAPI integration & auto-regeneration logic
+│
+├── backend/                    # Local-First FastAPI & Presidio Inference Server
+│   ├── main.py                 # API endpoints (/api/mask, /api/chat, /api/restore)
+│   ├── pii_config.py           # Custom regex rules, medical deny-lists, & allow-lists
+│   ├── models.json             # Externalized Ollama model configuration
+│   ├── benchmark_models.py     # Multi-model latency & token integrity benchmark
+│   ├── evaluate.py             # PII detection precision/recall evaluation
+│   └── requirements.txt        # Python dependencies
+│
+├── test/                       # Unit & Integration Tests
+│   ├── test_pii.py             # Presidio & regex entity detection tests
+│   └── test_masking.py         # Placeholder substitution & restoration tests
+│
+├── start.bat                   # One-click Windows launcher (zero-access-log mode)
+├── README.md                   # Setup instructions, architecture overview, & Ollama guide
+├── .gitignore                  # Git ignore rules (.venv, __pycache__, local logs)
+└── Final_report.pdf            # CIS6550 Capstone Final Report
+
 
 
 ## Installation and Setup
