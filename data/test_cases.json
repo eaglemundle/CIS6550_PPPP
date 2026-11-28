@@ -1,0 +1,89 @@
+{
+  "evaluation_cases": [
+    {
+      "category": "Identity & Canadian IDs",
+      "text": "My name is Marah Centins, my SIN is 123-456-789, and my postal code is N1G 2W1.",
+      "expected_values": ["Marah Centins", "123-456-789", "N1G 2W1"]
+    },
+    {
+      "category": "Academic & Vehicle",
+      "text": "Student Michael Chen (Student ID: 1184920) registered vehicle plate ABCD 123.",
+      "expected_values": ["Michael Chen", "Student ID: 1184920", "ABCD 123"]
+    },
+    {
+      "category": "Medical / PHI",
+      "text": "Patient David Kim was diagnosed with diabetes and prescribed insulin at the clinic.",
+      "expected_values": ["David Kim", "diabetes", "insulin"]
+    },
+    {
+      "category": "Credentials & Secrets",
+      "text": "Deploy using API key sk-proj1234567890abcdefghij and password=SecretPass99.",
+      "expected_values": ["sk-proj1234567890abcdefghij", "password=SecretPass99"]
+    },
+    {
+      "category": "Source Code & DB",
+      "text": "Developer EMP-4092 connected to postgres://admin:pass123@10.0.0.5:5432/prod to run def get_users(): pass.",
+      "expected_values": ["EMP-4092", "postgres://admin:pass123@10.0.0.5:5432/prod", "def get_users(): pass."]
+    },
+    {
+      "category": "Financial & Contact",
+      "text": "Transfer funds to account #987654321 or email sarah.j@uoguelph.ca for confirmation.",
+      "expected_values": ["account #987654321", "sarah.j@uoguelph.ca"]
+    },
+    {
+      "category": "Clean Prompt (No PII)",
+      "text": "Can you explain how asymmetric encryption works in modern web browsers?",
+      "expected_values": []
+    },
+    {
+      "category": "Edge: Unformatted & Lowercase",
+      "text": "send the tax slip to john doe sin 123456789 postal code n1g2w1 asap.",
+      "expected_values": ["john doe", "123456789", "n1g2w1"]
+    },
+    {
+      "category": "Edge: Unseen Medical Terms (OOV)",
+      "text": "Patient Maria Garcia was prescribed empagliflozin for chronic kidney disease.",
+      "expected_values": ["Maria Garcia", "empagliflozin", "chronic kidney disease"]
+    },
+    {
+      "category": "Edge: Ambiguous Tech Terms (FP Test)",
+      "text": "Configure Jenkins and Docker containers before pushing the build to staging.",
+      "expected_values": []
+    },
+    {
+      "category": "Edge: Unstructured Secrets",
+      "text": "Do not share Project Phoenix credentials or admin password winter2026! with external contractors.",
+      "expected_values": ["Project Phoenix", "winter2026!"]
+    }
+  ],
+  "llm_benchmark_cases": [
+    {
+      "scenario": "Canadian Identity & SIN",
+      "text": "Write a short confirmation email to Marah Centins (marah@uoguelph.ca) confirming we received her SIN 123-456-789."
+    },
+    {
+      "scenario": "Medical Confidentiality (PHI)",
+      "text": "Summarize this clinical note in two sentences: Patient David Dim was diagnosed with diabetes and prescribed insulin."
+    },
+    {
+      "scenario": "Corporate Secret Exposure",
+      "text": "Draft a brief security notice telling developer EMP-4092 to revoke exposed API key sk-proj1234567890abcdefghij immediately."
+    },
+    {
+      "scenario": "Residential Address & Postal Code",
+      "text": "Write a delivery instruction note for Moali Chen living at 50 Stone Rd E, Guelph, ON N1G 2W1 with phone number 519-824-4120."
+    },
+    {
+      "scenario": "Financial & Payment Data",
+      "text": "Draft a polite refund confirmation for Lily Carter (lily.carter@gmail.com) regarding a duplicate $149.99 charge on Visa card 4532-8910-2345-6789."
+    },
+    {
+      "scenario": "Internal Infrastructure & Network",
+      "text": "Help debug a database timeout error reported by Alex Rivera on internal staging server 192.168.10.42."
+    },
+    {
+      "scenario": "Benign Compliance Query (False-Positive Control)",
+      "text": "Explain the key principles of Canadian PIPEDA compliance and how local-first browser extensions reduce data exposure risks."
+    }
+  ]
+}

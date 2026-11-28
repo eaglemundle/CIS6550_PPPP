@@ -1,92 +1,120 @@
-import requests
+import json
+import time
 import statistics
+import requests
+from pathlib import Path
+from collections import defaultdict
 
-API_URL = "http://localhost:8000/api/mask"
+# Use 127.0.0.1 instead of localhost to avoid Windows IPv6 DNS resolution delay
+BASE_URL = "http://127.0.0.1:8000"
 
-# Synthetic test dataset covering diverse privacy scenarios (Proposal Objective 3)
-TEST_CASES = [
-    {
-        "category": "Identity & Canadian IDs",
-        "text": "My name is Sarah Jenkins, my SIN is 123-456-789, and my postal code is N1G 2W1.",
-        "expected_values": ["Sarah Jenkins", "123-456-789", "N1G 2W1"]
-    },
-    {
-        "category": "Academic & Vehicle",
-        "text": "Student Michael Chen (Student ID: 1184920) registered vehicle plate ABCD 123.",
-        "expected_values": ["Michael Chen", "Student ID: 1184920", "ABCD 123"]
-    },
-    {
-        "category": "Medical / PHI",
-        "text": "Patient David Kim was diagnosed with diabetes and prescribed insulin at the clinic.",
-        "expected_values": ["David Kim", "diabetes", "insulin"]
-    },
-    {
-        "category": "Credentials & Secrets",
-        "text": "Deploy using API key sk-proj1234567890abcdefghij and password=SecretPass99.",
-        "expected_values": ["sk-proj1234567890abcdefghij", "password=SecretPass99"]
-    },
-    {
-        "category": "Source Code & DB",
-        "text": "Developer EMP-4092 connected to postgres://admin:pass123@10.0.0.5:5432/prod to run def get_users(): pass.",
-        "expected_values": ["EMP-4092", "postgres://admin:pass123@10.0.0.5:5432/prod", "def get_users(): pass."]
-    },
-    {
-        "category": "Financial & Contact",
-        "text": "Transfer funds to account #987654321 or email sarah.j@uoguelph.ca for confirmation.",
-        "expected_values": ["account #987654321", "sarah.j@uoguelph.ca"]
-    },
-    {
-        "category": "Clean Prompt (No PII)",
-        "text": "Can you explain how asymmetric encryption works in modern web browsers?",
-        "expected_values": []
-    }
+_BASE_DIR = Path(__file__).resolve().parent
+_CANDIDATE_PATHS = [
+    _BASE_DIR / "data" / "benchmark_3000_edge_heavy.json",
+    _BASE_DIR.parent / "data" / "benchmark_3000_edge_heavy.json",
+    _BASE_DIR / "benchmark_3000_edge_heavy.json",
+    _BASE_DIR.parent / "benchmark_3000_edge_heavy.json",
 ]
 
-def run_evaluation():
-    total_tp = 0  # True Positives (Correctly detected PII)
-    total_fp = 0  # False Positives (Non-PII falsely flagged)
-    total_fn = 0  # False Negatives (Actual PII missed)
-    latencies = []
+_TEST_FILE = next((p for p in _CANDIDATE_PATHS if p.exists()), None)
+if _TEST_FILE is None:
+    raise FileNotFoundError("Could not find benchmark_3000_edge_heavy.json in expected directories.")
 
-    print("=" * 65)
-    print(f"{'Category':<25} | {'TP':<3} | {'FP':<3} | {'FN':<3} | {'Latency (ms)':<12}")
-    print("-" * 65)
+TEST_CASES = json.loads(_TEST_FILE.read_text(encoding="utf-8"))
 
-    for case in TEST_CASES:
-        response = requests.post(API_URL, json={"text": case["text"]})
-        response.raise_for_status()
-        data = response.json()
 
-        predicted_values = [item["value"] for item in data["detected_items"]]
-        expected_values = case["expected_values"]
-        latency = data["latency_ms"]
-        latencies.append(latency)
+def evaluate_case(session: requests.Session, text: str, expected_entities: list[str]):
+    start = time.perf_counter()
+    res = session.post(f"{BASE_URL}/api/mask", json={"text": text}, timeout=30)
+    res.raise_for_status()
+    latency_ms = (time.perf_counter() - start) * 1000.0
 
-        tp = sum(1 for val in predicted_values if val in expected_values)
-        fp = sum(1 for val in predicted_values if val not in expected_values)
-        fn = sum(1 for val in expected_values if val not in predicted_values)
+    data = res.json()
+    mappings = data.get("mappings", {})
+    detected_values = list(mappings.values())
+
+    matched_expected = set()
+    matched_detected = set()
+
+    for d_idx, det in enumerate(detected_values):
+        det_norm = det.strip().lower()
+        for e_idx, exp in enumerate(expected_entities):
+            if e_idx in matched_expected:
+                continue
+            exp_norm = exp.strip().lower()
+            if det_norm == exp_norm or exp_norm in det_norm or det_norm in exp_norm:
+                matched_expected.add(e_idx)
+                matched_detected.add(d_idx)
+                break
+
+    tp = len(matched_expected)
+    fn = len(expected_entities) - tp
+    fp = len(detected_values) - len(matched_detected)
+
+    return tp, fp, fn, latency_ms
+
+
+def main():
+    print(f"Loaded {len(TEST_CASES)} test cases from: {_TEST_FILE.name}")
+    print("Running local PII detection & masking benchmark...\n")
+
+    stats = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0, "latencies": []})
+    category_order = []
+
+    with requests.Session() as session:
+        # Warm-up request
+        session.post(f"{BASE_URL}/api/mask", json={"text": "warmup"}, timeout=10)
+
+        for idx, item in enumerate(TEST_CASES, 1):
+            if idx % 200 == 0:
+                print(f"  Evaluated {idx}/{len(TEST_CASES)} prompts...", end="\r", flush=True)
+
+            cat = item.get("category", "Uncategorized")
+            if cat not in stats:
+                category_order.append(cat)
+
+            text = item.get("text") or item.get("prompt", "")
+            expected = item.get("entities", [])
+
+            tp, fp, fn, lat = evaluate_case(session, text, expected)
+            stats[cat]["tp"] += tp
+            stats[cat]["fp"] += fp
+            stats[cat]["fn"] += fn
+            stats[cat]["latencies"].append(lat)
+
+    print(" " * 50, end="\r")
+    print("=" * 96)
+    print(f"{'Test Category':<42} | {'TP':>6} | {'FP':>6} | {'FN':>6} | {'Avg Latency (ms)':>18}")
+    print("-" * 96)
+
+    total_tp = total_fp = total_fn = 0
+    all_latencies = []
+
+    for cat in category_order:
+        s = stats[cat]
+        tp, fp, fn = s["tp"], s["fp"], s["fn"]
+        avg_lat = statistics.mean(s["latencies"]) if s["latencies"] else 0.0
 
         total_tp += tp
         total_fp += fp
         total_fn += fn
+        all_latencies.extend(s["latencies"])
 
-        print(f"{case['category']:<25} | {tp:<3} | {fp:<3} | {fn:<3} | {latency:<12.2f}")
+        print(f"{cat:<42} | {tp:>6} | {fp:>6} | {fn:>6} | {avg_lat:>15.2f} ms")
 
-    precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
-    recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
-    f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    avg_latency = statistics.mean(latencies)
+    overall_avg_lat = statistics.mean(all_latencies) if all_latencies else 0.0
+    precision = (total_tp / (total_tp + total_fp) * 100) if (total_tp + total_fp) > 0 else 0.0
+    recall = (total_tp / (total_tp + total_fn) * 100) if (total_tp + total_fn) > 0 else 0.0
+    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
 
-    print("=" * 65)
-    print(f"Total True Positives (TP) : {total_tp}")
-    print(f"Total False Positives (FP): {total_fp}")
-    print(f"Total False Negatives (FN): {total_fn}")
-    print("-" * 65)
-    print(f"Precision                 : {precision * 100:.2f}%")
-    print(f"Recall                    : {recall * 100:.2f}%")
-    print(f"F1-Score                  : {f1_score * 100:.2f}%")
-    print(f"Average Masking Latency   : {avg_latency:.2f} ms")
-    print("=" * 65)
+    print("-" * 96)
+    print(f"{'Total / Average':<42} | {total_tp:>6} | {total_fp:>6} | {total_fn:>6} | {overall_avg_lat:>15.2f} ms")
+    print("=" * 96)
+    print(f"Overall Precision : {precision:.2f}%")
+    print(f"Overall Recall    : {recall:.2f}%")
+    print(f"Overall F1-Score  : {f1:.2f}%")
+    print("=" * 96)
+
 
 if __name__ == "__main__":
-    run_evaluation()
+    main()

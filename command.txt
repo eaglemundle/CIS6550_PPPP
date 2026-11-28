@@ -1,7 +1,0 @@
-
-{
-  "text": "Hi, I'm Sarah Jenkins (sarah.j@uoguelph.ca). My phone is 519-555-0199, postal code is N1G 2W1, and SIN is 123-456-789."
-}
-
-
-uvicorn main:app --reload --port 8000

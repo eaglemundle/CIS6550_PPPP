@@ -34,12 +34,36 @@ body {
 }
 
 header {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 10px;
     margin-bottom: 12px;
 }
+
+.close-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #bbb;
+    font-size: 20px;
+    line-height: 1;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.close-btn:hover {
+    background: #ff3030;
+    border-color: #ff3030;
+    color: #ffffff;
+}
+
 
 h1 {
     font-size: 24px;

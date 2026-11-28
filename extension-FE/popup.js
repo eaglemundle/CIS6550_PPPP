@@ -161,3 +161,9 @@ document.getElementById("generate").addEventListener("click", generateAlternativ
 function showStatus(text) {
     document.getElementById("status").textContent = text;
 }
+
+
+// Close extension popup cleanly (anti-dark pattern / explicit user control)
+document.getElementById("close-btn")?.addEventListener("click", () => {
+    window.close();
+});

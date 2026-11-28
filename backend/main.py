@@ -89,13 +89,13 @@ class RestoreRequest(BaseModel):
 class RestoreResponse(BaseModel):
     restored_text: str
 
-@app.get("/")
-def health_check():
-    return {
-        "status": "ok",
-        "default_model": DEFAULT_MODEL,
-        "supported_models": SUPPORTED_MODELS
-    }
+@app.post("/api/restore", response_model=RestoreResponse)
+def restore_response(request: RestoreRequest):
+    restored = request.text
+    for placeholder, original_val in request.mappings.items():
+        restored = restored.replace(placeholder, original_val)
+    return RestoreResponse(restored_text=restored)
+
 
 @app.post("/api/mask", response_model=MaskResponse)
 def mask_prompt(request: MaskRequest):

@@ -19,17 +19,19 @@
     <main class="popup">
 
         <!-- App Title Header -->
-        <header>
-            <h1>AI Prompt Privacy Guard</h1>
-            <span class="shield">🔒</span>
-        </header>
+    <header>
+        <h1>AI Prompt Privacy Guard</h1>
+        <span class="shield">🔒</span>
+        <button id="close-btn" class="close-btn" type="button" aria-label="Close popup" title="Close">×</button>
+    </header>
+
 
         <!-- Local AI Model Selector (Placed at top for quick switching) -->
         <section class="model-section">
             <p>Local AI Model</p>
             <div class="model-selector">
                 <button data-model="llama3.2:3b" class="active">Llama 3.2</button>
-                <button data-model="qwen2.5:7b">Qwen 2.5</button>
+                <button data-model="qwen2.5:latest">Qwen 2.5</button>
                 <button data-model="mistral:latest">Mistral</button>
             </div>
         </section>

@@ -1,7 +1,31 @@
 import json
 import requests
-
+import statistics
 from pathlib import Path
+
+_BASE_DIR = Path(__file__).resolve().parent
+_TEST_FILE = _BASE_DIR / "data/benchmark_3000_edge_heavy.json"
+if not _TEST_FILE.exists():
+    _TEST_FILE = _BASE_DIR.parent / "data/benchmark_3000_edge_heavy.json"
+
+_ALL_CASES = json.loads(_TEST_FILE.read_text(encoding="utf-8"))
+
+# Stratified sample of 1,000 cases across all 14 categories (1,000 * 3 models = 3,000 total inferences)
+_BY_CAT = {}
+for c in _ALL_CASES:
+    cat = c.get("category", "default")
+    _BY_CAT.setdefault(cat, []).append(c)
+
+PRIVACY_TEST_CASES = []
+_PER_CAT = 1000 // len(_BY_CAT)
+for cat, items in _BY_CAT.items():
+    PRIVACY_TEST_CASES.extend(items[:_PER_CAT])
+# Fill remaining slots up to exactly 1,000 cases
+for cat, items in _BY_CAT.items():
+    if len(PRIVACY_TEST_CASES) >= 1000:
+        break
+    if len(items) > _PER_CAT:
+        PRIVACY_TEST_CASES.append(items[_PER_CAT])
 
 # Load externalized model configuration with safe fallback
 _CONFIG_PATH = Path(__file__).parent / "models.json"
@@ -14,50 +38,18 @@ else:
 DEFAULT_MODEL = _MODEL_CFG.get("default_model", "llama3.2:3b")
 SUPPORTED_MODELS = _MODEL_CFG.get("supported_models", ["llama3.2:3b", "qwen2.5:3b", "mistral:latest"])
 
-
 BASE_URL = "http://localhost:8000"
 
 
-PRIVACY_TEST_CASES = [
-    {
-        "scenario": "Canadian Identity & SIN",
-        "text": "Write a short confirmation email to Sarah Jenkins (sarah@uoguelph.ca) confirming we received her SIN 123-456-789."
-    },
-    {
-        "scenario": "Medical Confidentiality (PHI)",
-        "text": "Summarize this clinical note in two sentences: Patient David Kim was diagnosed with diabetes and prescribed insulin."
-    },
-    {
-        "scenario": "Corporate Secret Exposure",
-        "text": "Draft a brief security notice telling developer EMP-4092 to revoke exposed API key sk-proj1234567890abcdefghij immediately."
-    },
-    {
-        "scenario": "Residential Address & Postal Code",
-        "text": "Write a delivery instruction note for Michael Chen living at 50 Stone Rd E, Guelph, ON N1G 2W1 with phone number 519-824-4120."
-    },
-    {
-        "scenario": "Financial & Payment Data",
-        "text": "Draft a polite refund confirmation for Emily Carter (emily.carter@gmail.com) regarding a duplicate $149.99 charge on Visa card 4532-8910-2345-6789."
-    },
-    {
-        "scenario": "Internal Infrastructure & Network",
-        "text": "Help debug a database timeout error reported by Alex Rivera on internal staging server 192.168.10.42."
-    },
-    {
-        "scenario": "Benign Compliance Query (False-Positive Control)",
-        "text": "Explain the key principles of Canadian PIPEDA compliance and how local-first browser extensions reduce data exposure risks."
-    }
-]
-
-
 def run_benchmark():
+    print(f"Preparing {len(PRIVACY_TEST_CASES)} stratified prompts (Total LLM inferences: {len(PRIVACY_TEST_CASES) * len(SUPPORTED_MODELS)})...")
     prepared_cases = []
     for item in PRIVACY_TEST_CASES:
         mask_res = requests.post(f"{BASE_URL}/api/mask", json={"text": item["text"]})
         mask_res.raise_for_status()
         mask_data = mask_res.json()
         prepared_cases.append({
-            "scenario": item["scenario"],
+            "scenario": item.get("scenario", item.get("category", "unknown")),
             "masked_text": mask_data["masked_text"],
             "mappings": mask_data["mappings"]
         })
@@ -74,14 +66,14 @@ def run_benchmark():
         latencies = []
         status = "PASS"
 
-        for case in prepared_cases:
+        for idx, case in enumerate(prepared_cases, 1):
+            if idx % 100 == 0:
+                print(f"  [{model}] Progress: {idx}/{len(prepared_cases)}...", end="\r", flush=True)
             try:
-                # 1. Verify zero raw PII exists in the sanitized prompt
                 original_values = list(case["mappings"].values())
                 if any(val in case["masked_text"] for val in original_values):
                     leaked_count += 1
 
-                # 2. Query local LLM and record inference latency
                 chat_res = requests.post(
                     f"{BASE_URL}/api/chat",
                     json={"masked_text": case["masked_text"], "model": model},
@@ -92,12 +84,10 @@ def run_benchmark():
                 masked_reply = chat_data["masked_reply"]
                 latencies.append(chat_data["latency_ms"])
 
-                # 3. Verify privacy placeholder preservation in LLM output
                 placeholders = list(case["mappings"].keys())
                 total_tokens += len(placeholders)
                 preserved_tokens += sum(1 for ph in placeholders if ph in masked_reply)
 
-                # 4. Restore original values locally and verify completeness
                 restore_res = requests.post(
                     f"{BASE_URL}/api/restore",
                     json={"text": masked_reply, "mappings": case["mappings"]}
@@ -109,7 +99,8 @@ def run_benchmark():
                     restored_success += 1
 
             except Exception as e:
-                status = f"ERR"
+                print(f"\n[{model}] Failed on '{case['scenario']}': {type(e).__name__} -> {e}")
+                status = "ERR"
                 break
 
         if status == "PASS":
@@ -126,6 +117,7 @@ def run_benchmark():
             print(f"{model:<13} | {'N/A':<14} | {'N/A':<17} | {'N/A':<15} | {'N/A':<13} | {status:<6}")
 
     print("=" * 98)
+
 
 if __name__ == "__main__":
     run_benchmark()
