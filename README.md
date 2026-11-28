@@ -55,9 +55,6 @@ By keeping prompt processing and AI inference on the user's device, the project 
 ## System Architecture
 
 ```mermaid
-## System Architecture
-
-```mermaid
 flowchart TB
     classDef client fill:#e8f1fa,stroke:#2b6cb0,stroke-width:2px,color:#1a202c
     classDef backend fill:#ebf8ff,stroke:#3182ce,stroke-width:2px,color:#1a202c
@@ -67,10 +64,9 @@ flowchart TB
 
     subgraph Runtime["Runtime Privacy Guard Pipeline (127.0.0.1 Localhost - Zero External Leakage)"]
         direction LR
-
         subgraph Ext["Chrome Extension (Manifest V3)"]
             UI["Content Script & Popup UI<br/>• Dismiss Button (×)<br/>• Entity Review & Model Select"]:::client
-            Storage["Chrome Local Storage<br/>Ephemeral Placeholder Mappings<br/>(&lt;ID&gt; ↔ Original PII)"]:::storage
+            Storage["Chrome Local Storage<br/>Ephemeral Placeholder Mappings<br/>(<ID> ↔ Original PII)"]:::storage
             UI <-->|"Store / Lookup"| Storage
         end
 
@@ -85,7 +81,7 @@ flowchart TB
         end
 
         UI -->|"1. Raw User Prompt"| Orch
-        Orch -->|"3. Masked Prompt<br/>(&lt;CA_SIN_1&gt;, &lt;PERSON_1&gt;)"| Engine
+        Orch -->|"3. Masked Prompt<br/>(<CA_SIN_1>, <PERSON_1>)"| Engine
         Engine -->|"4. Masked Output"| Orch
         Orch -->|"5. Rehydrated Response<br/>(Original PII Restored)"| UI
     end
@@ -95,14 +91,12 @@ flowchart TB
         Gen["Synthetic Dataset Generator<br/>generate_3000_edge_heavy.py<br/>3,000 Prompts / 4,750 Entities (Seed 42)<br/>40% Baseline + 60% Edge Cases"]:::eval
         Runner["Evaluation Runner<br/>evaluate.py & benchmark_models.py<br/>Accuracy, Latency & Model Comparison"]:::eval
         Metrics["Empirical Metrics & Audit<br/>• Detection: 8.30 ms | 74.34% Recall | 67.26% F1<br/>• LLM Integrity: Leak & Restoration Rates<br/>• Network Isolation: DevTools 127.0.0.1 Audit"]:::eval
-
         Gen -->|"Runs 3,000-Prompt Suite"| Runner
         Runner -->|"Aggregates Results"| Metrics
     end
 
     Runner -.->|"Test Batch (/api/mask, /api/chat)"| Orch
 ```
-
 
 All prompt processing and AI inference are intended to remain on the local machine without requiring external AI APIs.
 
