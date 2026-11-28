@@ -55,41 +55,54 @@ By keeping prompt processing and AI inference on the user's device, the project 
 ## System Architecture
 
 ```mermaid
-flowchart TD
-    subgraph User_Environment ["User Local Machine - 100% On-Device"]
-        direction TB
-        User(["User"]) -->|"1. Raw Prompt with PII"| Ext["Chrome Extension - Manifest V3<br/>popup.html / popup.js"]
-        
-        subgraph Backend ["Local FastAPI Backend - 127.0.0.1:8000"]
-            direction TB
-            API["main.py - API Gateway"]
-            PII["pii_detector.py<br/>Regex / Microsoft Presidio"]
-            Mask["prompt_masking.py<br/>Placeholder Mapping Store"]
-            Resp["response.py<br/>Placeholder Restoration"]
-            
-            API --> PII
-            PII -->|"2. Detected Entities"| Mask
-            Mask -->|"3. Sanitized Prompt"| API
+## System Architecture
+
+```mermaid
+flowchart TB
+    classDef client fill:#e8f1fa,stroke:#2b6cb0,stroke-width:2px,color:#1a202c
+    classDef backend fill:#ebf8ff,stroke:#3182ce,stroke-width:2px,color:#1a202c
+    classDef llm fill:#e6fffa,stroke:#2c7a7b,stroke-width:2px,color:#1a202c
+    classDef eval fill:#edf2f7,stroke:#4a5568,stroke-width:2px,color:#1a202c
+    classDef storage fill:#f7fafc,stroke:#718096,stroke-width:1.5px,stroke-dasharray: 4 4,color:#1a202c
+
+    subgraph Runtime["Runtime Privacy Guard Pipeline (127.0.0.1 Localhost - Zero External Leakage)"]
+        direction LR
+
+        subgraph Ext["Chrome Extension (Manifest V3)"]
+            UI["Content Script & Popup UI<br/>• Dismiss Button (×)<br/>• Entity Review & Model Select"]:::client
+            Storage["Chrome Local Storage<br/>Ephemeral Placeholder Mappings<br/>(&lt;ID&gt; ↔ Original PII)"]:::storage
+            UI <-->|"Store / Lookup"| Storage
         end
-        
-        Ollama["Ollama Runtime<br/>Local LLM: Llama / Mistral"]
-        
-        Ext <-->|"HTTP REST API - Localhost"| API
-        API -->|"4. Masked Prompt"| Ollama
-        Ollama -->|"5. Masked AI Response"| API
-        API --> Resp
-        Resp -->|"6. Restored Final Response"| Ext
-        Ext -->|"7. Display Safe Output"| User
+
+        subgraph API["FastAPI Backend (:8000)"]
+            Orch["API Orchestrator<br/>Request Routing & Session Context"]:::backend
+            Presidio["Presidio NER + Custom Canadian Regex<br/>Canadian SIN, Postal Codes, PHI, Secrets<br/>Avg Masking Latency: ~8.30 ms"]:::backend
+            Orch <-->|"2. Detect & Mask"| Presidio
+        end
+
+        subgraph Ollama["Ollama Local Runtime (:11434)"]
+            Engine["Local Inference Engine<br/>Llama 3.2 | Qwen 2.5 | Mistral<br/>100% Offline Inference"]:::llm
+        end
+
+        UI -->|"1. Raw User Prompt"| Orch
+        Orch -->|"3. Masked Prompt<br/>(&lt;CA_SIN_1&gt;, &lt;PERSON_1&gt;)"| Engine
+        Engine -->|"4. Masked Output"| Orch
+        Orch -->|"5. Rehydrated Response<br/>(Original PII Restored)"| UI
     end
 
-    ExternalCloud["External AI Services"]
-    User_Environment -. "Zero External Data Transmission" .-x ExternalCloud
+    subgraph Offline["Offline Benchmark & Validation Pipeline (Backend Evaluation)"]
+        direction LR
+        Gen["Synthetic Dataset Generator<br/>generate_3000_edge_heavy.py<br/>3,000 Prompts / 4,750 Entities (Seed 42)<br/>40% Baseline + 60% Edge Cases"]:::eval
+        Runner["Evaluation Runner<br/>evaluate.py & benchmark_models.py<br/>Accuracy, Latency & Model Comparison"]:::eval
+        Metrics["Empirical Metrics & Audit<br/>• Detection: 8.30 ms | 74.34% Recall | 67.26% F1<br/>• LLM Integrity: Leak & Restoration Rates<br/>• Network Isolation: DevTools 127.0.0.1 Audit"]:::eval
 
-    style User_Environment fill:#f8f9fa,stroke:#333,stroke-width:2px
-    style Backend fill:#e3f2fd,stroke:#1565c0,stroke-width:1.5px
-    style Ollama fill:#fff3e0,stroke:#ef6c00,stroke-width:1.5px
-    style ExternalCloud fill:#ffebee,stroke:#c62828,stroke-dasharray: 5 5
+        Gen -->|"Runs 3,000-Prompt Suite"| Runner
+        Runner -->|"Aggregates Results"| Metrics
+    end
+
+    Runner -.->|"Test Batch (/api/mask, /api/chat)"| Orch
 ```
+
 
 All prompt processing and AI inference are intended to remain on the local machine without requiring external AI APIs.
 
